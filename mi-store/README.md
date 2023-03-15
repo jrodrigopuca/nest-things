@@ -272,3 +272,48 @@ export class ParseIntPipe implements PipeTransform {
   }
 }
 ```
+
+## Validación
+
+```
+yarn add class-validator class-transformer
+yarn add @nestjs/mapped-types
+```
+
+Se crea una validación para los datos que llegan al controller, antes de que lleguen al service
+para ello es necesario crear un esquema o Dto
+
+```
+export class CreateProductsDto {
+  @IsString({ message: 'el nombre de ser un texto' })
+  @IsNotEmpty({ message: 'el campo nombre no debe ir vacio' })
+  readonly name: string;
+
+  @IsString({ message: 'la descripción debe ser un texto' })
+  @IsNotEmpty({ message: 'el campo descripción no debe ir vacio' })
+  readonly description: string;
+
+  @IsNumber({}, { message: 'el precio debe ser un valor númerico' })
+  @IsNotEmpty({ message: 'el campo precio no debe ir vacio' })
+  @IsPositive({ message: 'el campo precio debe ser positivo' })
+  readonly price: number;
+}
+```
+
+Para activar la validación de los campos se realiza de manera general en el main:
+
+```
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  // se agrega un pipe de validación
+  // whitelist: ignora los atributos que no estan definidos en el DTO
+  // forbidNonWhitelisted: alerta si hay un atributo no definido en el DTO
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+  await app.listen(3000);
+}
+```

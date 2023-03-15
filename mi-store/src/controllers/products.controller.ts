@@ -15,9 +15,11 @@ import {
 import { Response } from 'express';
 import { ParseIntPipe } from '../common/parse-int/parse-int.pipe';
 import { ProductsService } from 'src/service/products.service';
+import { CreateProductsDto, UpdateProductsDto } from './../dtos/products.dtos';
 
 @Controller('products')
 export class ProductsController {
+  //inyección de un servicio en un controlador
   constructor(private productsService: ProductsService) {}
 
   @Get()
@@ -40,12 +42,12 @@ export class ProductsController {
   }
 
   @Post()
-  createProduct(@Body() payload: any) {
+  createProduct(@Body() payload: CreateProductsDto) {
     return this.productsService.create(payload);
   }
 
   @Put(':id')
-  updateProduct(@Param('id') id: string, @Body() payload: any) {
+  updateProduct(@Param('id') id: string, @Body() payload: UpdateProductsDto) {
     const product = this.productsService.getOne(parseInt(id));
     if (product) {
       return this.productsService.update(+id, payload);
