@@ -126,8 +126,6 @@ export class ProductsController {
 
   @Post()
   createProduct(@Body() payload: any) {
-    payload.id = Math.floor(Math.random() * 100);
-    this.products.push(payload);
     return {
       message: 'creado',
       payload,
@@ -136,10 +134,6 @@ export class ProductsController {
 
   @Put(':id')
   updateProduct(@Param('id') id: string, @Body() payload: any) {
-    this.products = this.products.map((product: any) =>
-      product.id === parseInt(id) ? { ...product, ...payload } : { ...product },
-    );
-
     return {
       id,
       payload,
@@ -148,9 +142,6 @@ export class ProductsController {
 
   @Delete(':id')
   deleteProduct(@Param('id') id: string) {
-    this.products = this.products.filter(
-      (product: any) => product.id !== parseInt(id),
-    );
     return {
       id,
     };
@@ -181,4 +172,103 @@ import { Response } from 'express';
     }
   }
 
+```
+
+## servicio
+
+```
+$ nest generate service service/products --flat
+```
+
+### Ejemplo
+
+```
+import { Injectable } from '@nestjs/common';
+import { Product } from './../entities/product.entity';
+
+@Injectable()
+export class ProductsService {
+  private products: Product[] = [];
+  private counter = 1;
+
+  getAll() {
+    return this.products;
+  }
+
+  getOne(id: number) {
+    return this.products.find((product) => product.id === id);
+  }
+
+  create(payload: any) {
+    this.counter++;
+    const newProduct = { id: this.counter, ...payload };
+    this.products.push(newProduct);
+    return newProduct;
+  }
+
+  update(id: number, payload: any) {
+    this.products = this.products.map((product: any) => {
+      if (product.id !== id) return product;
+      return { ...product, ...payload };
+    });
+    return true;
+  }
+
+  delete(id: number) {
+    this.products = this.products.filter((product: any) => product.id !== id);
+    return true;
+  }
+}
+```
+
+### Ejemplo: Manejo de excepciones
+
+Pueden hacer con HttpException (que es el más generico)
+Otras opciones:
+
+- NotFoundException (404)
+- InternalServerErrorException (500)
+- Más https://docs.nestjs.com/exception-filters#built-in-http-exceptions
+
+```
+  getOne(id: number) {
+    const product = this.products.find((product) => product.id === id);
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+    return product;
+  }
+```
+
+## Pipes
+
+Se usan para validar o transformar
+se pueden traer desde @nestjs/common'
+
+```
+  getProductById(
+    @Res() response: Response,
+    @Param('id', ParseIntPipe) id: number,
+  ) {...
+  }
+```
+
+### Creando propios pipes
+
+```
+ nest g pipe common/parse-int
+```
+
+Ejemplo:
+
+```
+export class ParseIntPipe implements PipeTransform {
+  transform(value: string, metadata: ArgumentMetadata) {
+    const valueInt = parseInt(value);
+    if (isNaN(valueInt)) {
+      throw new BadRequestException('Valor no númerico');
+    }
+    return value;
+  }
+}
 ```

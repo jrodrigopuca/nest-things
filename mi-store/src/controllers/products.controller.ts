@@ -9,28 +9,30 @@ import {
   Post,
   Put,
   Res,
+  //ParseIntPipe,
 } from '@nestjs/common';
 
 import { Response } from 'express';
+import { ParseIntPipe } from '../common/parse-int/parse-int.pipe';
+import { ProductsService } from 'src/service/products.service';
 
 @Controller('products')
 export class ProductsController {
-  private products: string[] = [];
+  constructor(private productsService: ProductsService) {}
 
   @Get()
   getProducts() {
-    return this.products;
+    return this.productsService.getAll();
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.NOT_FOUND)
-  getProductById(@Res() response: Response, @Param('id') id: string) {
-    const found = this.products.filter(
-      (product: any) => product.id === parseInt(id),
-    );
-    console.log(found.length);
-
-    if (found.length > 0) {
+  getProductById(
+    @Res() response: Response,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const found = this.productsService.getOne(id);
+    if (found) {
       response.status(200).send(found);
     } else {
       response.status(404).send();
@@ -39,33 +41,24 @@ export class ProductsController {
 
   @Post()
   createProduct(@Body() payload: any) {
-    payload.id = Math.floor(Math.random() * 100);
-    this.products.push(payload);
-    return {
-      message: 'creado',
-      payload,
-    };
+    return this.productsService.create(payload);
   }
 
   @Put(':id')
   updateProduct(@Param('id') id: string, @Body() payload: any) {
-    this.products = this.products.map((product: any) =>
-      product.id === parseInt(id) ? { ...product, ...payload } : { ...product },
-    );
-
-    return {
-      id,
-      payload,
-    };
+    const product = this.productsService.getOne(parseInt(id));
+    if (product) {
+      return this.productsService.update(+id, payload);
+    }
+    return null;
   }
 
   @Delete(':id')
   deleteProduct(@Param('id') id: string) {
-    this.products = this.products.filter(
-      (product: any) => product.id !== parseInt(id),
-    );
-    return {
-      id,
-    };
+    const product = this.productsService.getOne(parseInt(id));
+    if (product) {
+      return this.productsService.delete(+id);
+    }
+    return null;
   }
 }
