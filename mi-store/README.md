@@ -317,3 +317,11 @@ async function bootstrap() {
   await app.listen(3000);
 }
 ```
+
+## Módulos
+
+sirven para segmentar el software en partes más pequeñas
+
+```
+$ nest g module users
+```
