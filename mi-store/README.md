@@ -86,6 +86,9 @@ $ yarn run test:cov
 
   // Crear controller desde Terminal en carpeta controller
   $ nest g controller controllers/products --flat
+
+  // Crear controller para un módulo
+  nest g controller users/controllers/users --flat
 ```
 
 ### Controller: POST
@@ -324,4 +327,15 @@ sirven para segmentar el software en partes más pequeñas
 
 ```
 $ nest g module users
+```
+
+```
+@Module({
+  //controladores
+  controllers: [ProductsController, CategoriesController],
+  //servicios
+  providers: [ProductsService],
+  //lo que se expondrá a otros módulos
+  exports: [ProductsService],
+})
 ```
