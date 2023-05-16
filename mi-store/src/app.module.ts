@@ -20,6 +20,7 @@ const SALUTE = 'Hello friend';
     DatabaseModule,
     ConfigModule.forRoot({
       envFilePath: enviroments[process.env.NODE_ENV],
+      load: [config],
       isGlobal: true,
     }),
   ],
