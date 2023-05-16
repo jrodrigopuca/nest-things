@@ -6,11 +6,15 @@ import {
 import { User } from './../entities/user.entity';
 import { Order } from './../entities/order.entity';
 import { ProductsService } from './../../products/services/products.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
   //inyectar un servicio de otro módulo
-  constructor(private productsService: ProductsService) {}
+  constructor(
+    private productsService: ProductsService,
+    private configService: ConfigService,
+  ) {}
 
   private users: User[] = [
     {
@@ -41,5 +45,11 @@ export class UsersService {
     } else {
       throw new BadRequestException('Order not found');
     }
+  }
+
+  getData() {
+    const myConfig = this.configService.get('DB_NAME');
+    console.log(myConfig);
+    return 'config llega';
   }
 }

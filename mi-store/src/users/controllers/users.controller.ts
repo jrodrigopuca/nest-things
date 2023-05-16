@@ -5,6 +5,11 @@ import { UsersService } from './../service/users.service';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @Get()
+  getData() {
+    return this.usersService.getData();
+  }
+
   @Get(':id')
   getUserById(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.getOne(id);

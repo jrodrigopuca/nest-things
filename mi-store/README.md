@@ -339,3 +339,73 @@ $ nest g module users
   exports: [ProductsService],
 })
 ```
+
+## Inyección
+
+Se puede inyectar clases o variables
+Ejemplo
+
+```
+const SALUTE = 'Hello friend';
+
+@Module({
+  imports: [UsersModule, ProductsModule],
+  controllers: [AppController],
+  providers: [
+    { provide: AppService, useClass: AppService },
+    {
+      provide: 'SALUTE_VALUE',
+      useValue: SALUTE,
+    },
+  ],
+})
+```
+
+### Factory
+
+instalar axios
+
+```
+npm i --save @nestjs/axios axios
+```
+
+Implementando factory
+
+```
+    {
+      provide: 'TASKS',
+      useFactory: async (http: HttpService) => {
+        const request = http.get('http://jsonplaceholder.typicode.com/todos');
+        const tasks = await lastValueFrom(request);
+        return tasks.data;
+      },
+      inject: [HttpService],
+    },
+```
+
+## Global
+
+Esto permitirá que los valores a inyectar pasen a ser globales para llamarse en cualquier lado
+
+```
+import { Module, Global } from '@nestjs/common';
+
+const DB_NAME = 'products';
+const DB_NAME_PROD = 'productos';
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide: 'DB_NAME',
+      useValue: process.env.NODE_ENV === 'prod' ? DB_NAME_PROD : DB_NAME,
+    },
+  ],
+  exports: ['DB_NAME'],
+})
+export class DatabaseModule {}
+```
+
+### Config
+
+npm i --save @nestjs/config
