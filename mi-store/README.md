@@ -408,4 +408,27 @@ export class DatabaseModule {}
 
 ### Config
 
+```
+Instalar
 npm i --save @nestjs/config
+
+En código
+import { ConfigModule } from '@nestjs/config';
+import config from './config'; //archivo que pasa los envs a variables
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: enviroments[process.env.NODE_ENV],
+      load: [config],
+      isGlobal: true,
+    }),
+  ],
+
+```
+
+### Swagger
+
+```
+npm install --save @nestjs/swagger swagger-ui-express
+```
