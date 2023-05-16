@@ -16,13 +16,16 @@ import { Response } from 'express';
 import { ParseIntPipe } from './../../common/parse-int/parse-int.pipe';
 import { ProductsService } from './../services/products.service';
 import { CreateProductsDto, UpdateProductsDto } from './../dtos/products.dtos';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Products') // Separa por grupo
 @Controller('products')
 export class ProductsController {
   //inyección de un servicio en un controlador
   constructor(private productsService: ProductsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'lista de productos' })
   getProducts() {
     return this.productsService.getAll();
   }
