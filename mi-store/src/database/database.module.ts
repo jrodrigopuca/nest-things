@@ -1,16 +1,18 @@
-import { Module, Global } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
-const PROJ_NAME = 'products';
-const PROJ_NAME_PROD = 'productos';
-
-@Global()
 @Module({
-  providers: [
-    {
-      provide: 'PROJ_NAME',
-      useValue: process.env.NODE_ENV === 'prod' ? PROJ_NAME_PROD : PROJ_NAME,
-    },
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'mariadb',
+      host: 'localhost',
+      port: 3306,
+      username: 'root',
+      password: 'pass123',
+      database: 'mini-store',
+      entities: [__dirname + '/../**/*.entity.{js,ts}'],
+      synchronize: true,
+    }),
   ],
-  exports: ['PROJ_NAME'],
 })
 export class DatabaseModule {}
