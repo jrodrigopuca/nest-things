@@ -8,6 +8,10 @@ export type Todo = {
   createdAt: string;
 };
 
+export type CreateResult =
+  | { kind: 'created'; todo: Todo }
+  | { kind: 'duplicate_created'; todo: Todo; duplicateOfId: number };
+
 // Servicio para gestionar los Todos
 @Injectable()
 export class TodosService {
@@ -33,6 +37,29 @@ export class TodosService {
     };
     this.todos.push(todo);
     return todo;
+  }
+
+  createSmart(title: string): CreateResult {
+    const existing = this.todos.find((t) => t.title === title);
+    if (existing) {
+      const todo: Todo = {
+        id: this.nextId++,
+        title,
+        done: false,
+        createdAt: new Date().toISOString(),
+      };
+      this.todos.push(todo);
+      return { kind: 'duplicate_created', todo, duplicateOfId: existing.id };
+    } else {
+      const todo: Todo = {
+        id: this.nextId++,
+        title,
+        done: false,
+        createdAt: new Date().toISOString(),
+      };
+      this.todos.push(todo);
+      return { kind: 'created', todo };
+    }
   }
 
   update(id: number, patch: Partial<Pick<Todo, 'title' | 'done'>>): Todo {

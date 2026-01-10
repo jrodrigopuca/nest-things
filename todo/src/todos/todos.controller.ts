@@ -1,18 +1,22 @@
 import {
   Body,
+  Header,
   Controller,
   Delete,
   Get,
   Param,
   Patch,
   Post,
+  UseInterceptors,
 } from '@nestjs/common';
 import { TodosService } from './todos.service';
 import type { Todo } from './todos.service';
+import { ResponseInterceptor } from './response.interceptor';
 
 type CreateTodoDto = { title: string };
 type UpdateTodoDto = { title?: string; done?: boolean };
 
+@UseInterceptors(ResponseInterceptor)
 @Controller('todos')
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
@@ -30,8 +34,22 @@ export class TodosController {
 
   //Crear un nuevo todo
   @Post()
-  create(@Body() body: CreateTodoDto): Todo {
-    return this.todosService.create(body.title);
+  @Header('Location', '/todos')
+  create(@Body() body: CreateTodoDto) {
+    //return this.todosService.create(body.title);
+    const result = this.todosService.createSmart(body.title);
+
+    if (result.kind === 'created') {
+      return { data: result.todo, meta: { duplicate: false } };
+    }
+
+    return {
+      data: result.todo,
+      meta: {
+        duplicate: true,
+        duplicateOfId: result.duplicateOfId,
+      },
+    };
   }
 
   //Marcar como completado o actualizar el título
