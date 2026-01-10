@@ -7,32 +7,69 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-interface PartialResponse {
-  meta?: Record<string, unknown>;
-  data?: unknown;
+type Meta = Record<string, unknown>;
+
+interface ApiEnvelope {
+  data: unknown;
+  meta: Meta;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function hasMeta(value: unknown): value is { meta: Meta } {
+  return (
+    isPlainObject(value) && 'meta' in value && isPlainObject(value['meta'])
+  );
+}
+
+function isEnvelope(value: unknown): value is ApiEnvelope {
+  return hasMeta(value) && 'data' in value;
 }
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
-  intercept(_: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
-      map((partial: PartialResponse) => {
-        const { meta = {}, data, ...rest } = partial || {};
-        const responseData = data ?? rest;
-        if (
-          responseData &&
-          typeof responseData === 'object' &&
-          'meta' in responseData
-        ) {
-          delete responseData['meta'];
+      map((body: unknown) => {
+        const timestamp = new Date().toISOString();
+
+        // 1) Ya viene envuelto
+        if (isEnvelope(body)) {
+          return {
+            data: body.data,
+            meta: {
+              ...body.meta,
+              timestamp: body.meta.timestamp ?? timestamp,
+            },
+          };
         }
 
+        // 2) Objeto parcial con meta y/o data
+        if (isPlainObject(body) && ('meta' in body || 'data' in body)) {
+          const meta = hasMeta(body) ? body.meta : {};
+
+          if ('data' in body) {
+            return {
+              data: body.data,
+              meta: { ...meta, timestamp },
+            };
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { meta: _meta, ...rest } = body;
+
+          return {
+            data: rest,
+            meta: { ...meta, timestamp },
+          };
+        }
+
+        // 3) Cualquier otro tipo
         return {
-          data: { ...responseData },
-          meta: {
-            ...meta,
-            timestamp: new Date().toISOString(),
-          },
+          data: body,
+          meta: { timestamp },
         };
       }),
     );
