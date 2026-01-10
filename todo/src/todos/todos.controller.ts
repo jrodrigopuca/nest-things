@@ -11,6 +11,11 @@ import {
 } from '@nestjs/common';
 import { TodosService } from './todos.service';
 import type { Todo } from './todos.service';
+type Meta = Record<string, unknown>;
+interface APIResponse<T> {
+  data: T;
+  meta: Meta;
+}
 import { ResponseInterceptor } from './response.interceptor';
 
 type CreateTodoDto = { title: string };
@@ -22,27 +27,33 @@ export class TodosController {
   constructor(private readonly todosService: TodosService) {}
 
   @Get()
-  findAll(): Todo[] {
-    return this.todosService.findAll();
+  findAll(): APIResponse<Todo[]> {
+    return {
+      data: this.todosService.findAll(),
+      meta: {},
+    };
   }
 
   //Obtener un todo por su ID
   @Get(':id')
-  findOne(@Param('id') id: string): Todo {
-    return this.todosService.findOne(Number(id));
+  findOne(@Param('id') id: string): APIResponse<Todo> {
+    return {
+      data: this.todosService.findOne(Number(id)),
+      meta: {},
+    };
   }
 
   //Crear un nuevo todo
   @Post()
   @Header('Location', '/todos')
-  create(@Body() body: CreateTodoDto) {
-    //return this.todosService.create(body.title);
+  create(@Body() body: CreateTodoDto): APIResponse<Todo> {
     const result = this.todosService.createSmart(body.title);
-
     if (result.kind === 'created') {
-      return { data: result.todo, meta: { duplicate: false } };
+      return {
+        data: result.todo,
+        meta: { duplicate: false },
+      };
     }
-
     return {
       data: result.todo,
       meta: {
@@ -54,20 +65,32 @@ export class TodosController {
 
   //Marcar como completado o actualizar el título
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: UpdateTodoDto): Todo {
-    return this.todosService.update(Number(id), body);
+  update(
+    @Param('id') id: string,
+    @Body() body: UpdateTodoDto,
+  ): APIResponse<Todo> {
+    return {
+      data: this.todosService.update(Number(id), body),
+      meta: {},
+    };
   }
 
   //Eliminar un todo por su ID
   @Delete(':id')
-  remove(@Param('id') id: string): { ok: true } {
+  remove(@Param('id') id: string): APIResponse<{ ok: true }> {
     this.todosService.remove(Number(id));
-    return { ok: true };
+    return {
+      data: { ok: true },
+      meta: {},
+    };
   }
 
   // opcional: borrar todo en memoria
   @Delete()
-  clear() {
-    return this.todosService.clear();
+  clear(): APIResponse<{ deleted: number }> {
+    return {
+      data: this.todosService.clear(),
+      meta: {},
+    };
   }
 }
