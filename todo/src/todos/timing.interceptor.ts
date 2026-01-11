@@ -7,20 +7,18 @@ import {
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { toApiResponse, APIResponse } from './api-response.util';
-/**
- * Interceptor que envuelve las respuestas en un objeto APIResponse
- * y añade un timestamp en los metadatos.
- */
+
 @Injectable()
-export class ResponseInterceptor implements NestInterceptor {
+export class TimingInterceptor implements NestInterceptor {
   intercept(
     _context: ExecutionContext,
     next: CallHandler,
-  ): Observable<APIResponse<unknown>> {
+  ): Observable<unknown> {
+    const start = Date.now();
     return next.handle().pipe(
       map((body: unknown): APIResponse<unknown> => {
-        const timestamp = new Date().toISOString();
-        return toApiResponse(body, { timestamp });
+        const durationMs = Date.now() - start;
+        return toApiResponse(body, { durationMs });
       }),
     );
   }

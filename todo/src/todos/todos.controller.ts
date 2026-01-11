@@ -17,11 +17,12 @@ interface APIResponse<T> {
   meta: Meta;
 }
 import { ResponseInterceptor } from './response.interceptor';
+import { TimingInterceptor } from './timing.interceptor';
 
 type CreateTodoDto = { title: string };
 type UpdateTodoDto = { title?: string; done?: boolean };
 
-@UseInterceptors(ResponseInterceptor)
+@UseInterceptors(ResponseInterceptor, TimingInterceptor)
 @Controller('todos')
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}
@@ -48,17 +49,14 @@ export class TodosController {
   @Header('Location', '/todos')
   create(@Body() body: CreateTodoDto): APIResponse<Todo> {
     const result = this.todosService.createSmart(body.title);
-    if (result.kind === 'created') {
-      return {
-        data: result.todo,
-        meta: { duplicate: false },
-      };
-    }
+
     return {
       data: result.todo,
       meta: {
-        duplicate: true,
-        duplicateOfId: result.duplicateOfId,
+        duplicate: result.kind !== 'created',
+        duplicateOfId:
+          result.kind !== 'created' ? result.duplicateOfId : undefined,
+        location: `/todos/${result.todo.id}`,
       },
     };
   }
